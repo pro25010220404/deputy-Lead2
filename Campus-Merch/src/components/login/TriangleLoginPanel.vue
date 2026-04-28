@@ -1,5 +1,7 @@
 <script setup>
 import { reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps({
   mode: { type: String, default: 'login' },
@@ -7,18 +9,43 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['submit'])
+const router = useRouter()
 
 const form = reactive({
   username: '',
+  name: '',
+  email: '',
+  verificationCode: '',
   password: '',
   confirmPassword: '',
 })
 
+const sendCode = () => {
+  if (!form.email) {
+    ElMessage.warning('请先输入邮箱')
+    return
+  }
+  ElMessage.success('验证码已发送')
+}
+
 const onSubmit = () => {
+  if (!form.username || !form.password) {
+    ElMessage.warning('请填写账号和密码')
+    return
+  }
+  if (props.mode === 'register' && (!form.name || !form.email || !form.verificationCode)) {
+    ElMessage.warning('请完整填写注册信息')
+    return
+  }
   if (props.mode === 'register' && form.password !== form.confirmPassword) {
+    ElMessage.error('两次输入的密码不一致')
     return
   }
   emit('submit', { ...form })
+}
+
+const goToSwitchPage = () => {
+  router.push(props.mode === 'login' ? '/register' : '/login')
 }
 </script>
 
@@ -29,36 +56,48 @@ const onSubmit = () => {
       <div class="triangle-frame"></div>
       <div class="triangle-panel">
         <div class="top-lines"></div>
-        <div class="content">
-          <p class="sub">{{ mode === 'login' ? 'LOG INTO' : 'REGISTER' }}</p>
-          <h1>{{ mode === 'login' ? 'SYSTEM' : 'ACCOUNT' }}</h1>
-          <div class="accent-line"></div>
-
-          <form @submit.prevent="onSubmit">
-            <input v-model.trim="form.username" type="text" placeholder="LOGIN..." required />
-            <input v-model.trim="form.password" type="password" placeholder="PASSWORD..." required />
-            <input
-              v-if="mode === 'register'"
-              v-model.trim="form.confirmPassword"
-              type="password"
-              placeholder="CONFIRM PASSWORD..."
-              required
-            />
-          </form>
-          <p v-if="mode === 'register'" class="role-tip">NEW ACCOUNT DEFAULT ROLE: STUDENT</p>
-          <router-link v-if="mode === 'login'" class="switch-link" to="/register">CREATE ACCOUNT</router-link>
-          <router-link v-else class="switch-link" to="/login">BACK TO LOGIN</router-link>
+        <div :class="['content', { 'login-content': mode === 'login' }]">
+          <p class="sub">{{ mode === 'login' ? '登录' : '注册' }}</p>
+          <h1>{{ mode === 'login' ? '校园商城' : '账号' }}</h1>
+          <el-form :model="form" @submit.prevent>
+            <el-form-item>
+              <el-input v-model.trim="form.username" placeholder="请输入账号" clearable />
+            </el-form-item>
+            <el-form-item v-if="mode === 'register'">
+              <el-input v-model.trim="form.name" placeholder="请输入姓名" clearable />
+            </el-form-item>
+            <el-form-item v-if="mode === 'register'" class="code-row">
+              <el-input v-model.trim="form.email" placeholder="请输入邮箱" clearable />
+              <el-button class="code-button" @click="sendCode">获取验证码</el-button>
+            </el-form-item>
+            <el-form-item v-if="mode === 'register'">
+              <el-input v-model.trim="form.verificationCode" placeholder="请输入验证码" clearable />
+            </el-form-item>
+            <el-form-item>
+              <el-input v-model.trim="form.password" type="password" placeholder="请输入密码" show-password />
+            </el-form-item>
+            <el-form-item v-if="mode === 'register'">
+              <el-input
+                v-model.trim="form.confirmPassword"
+                type="password"
+                placeholder="请确认密码"
+                show-password
+              />
+            </el-form-item>
+          </el-form>
+          <el-link class="switch-link" :underline="false" @click="goToSwitchPage">
+            {{ mode === 'login' ? '创建账号' : '返回登录' }}
+          </el-link>
         </div>
 
         <span class="arrow">&gt;</span>
-        <span class="left-mark"></span>
+        <span :class="['left-mark', { 'left-mark-register': mode === 'register' }]"></span>
       </div>
 
-      <button class="enter-flag" :disabled="submitting" type="submit" @click="onSubmit">
+      <el-button :class="['enter-flag', { 'enter-flag-login': mode === 'login' }]" :disabled="submitting" @click="onSubmit">
         <span class="dot">o</span>
-        <span>{{ submitting ? 'WAIT' : mode === 'login' ? 'ENTER' : 'JOIN' }}</span>
-      </button>
-      <span class="bottom-lines"></span>
+        <span class="enter-text">{{ submitting ? '请稍候' : mode === 'login' ? '进入' : '注册' }}</span>
+      </el-button>
     </div>
   </section>
 </template>
@@ -73,8 +112,8 @@ const onSubmit = () => {
 
 .triangle-wrap {
   position: relative;
-  width: min(86vw, 760px);
-  aspect-ratio: 1.08 / 1;
+  width: min(96vw, 1020px);
+  aspect-ratio: 1.25 / 1;
 }
 
 .triangle-shadow,
@@ -115,10 +154,14 @@ const onSubmit = () => {
 
 .content {
   position: absolute;
-  left: 19%;
-  top: 20%;
-  width: 52%;
+  left: 13%;
+  top: 11%;
+  width: 58%;
   color: #9ca7b6;
+}
+
+.login-content {
+  top: 24%;
 }
 
 .sub {
@@ -135,46 +178,35 @@ h1 {
   letter-spacing: 0.02em;
 }
 
-.accent-line {
-  width: 62%;
-  border-bottom: 3px solid #56d3f6;
-  margin-bottom: 14px;
-}
-
-form {
+.el-form {
   display: grid;
-  gap: 10px;
+  gap: 30px;
 }
 
-input {
-  border: 0;
-  border-bottom: 2px solid #d7dce4;
-  padding: 8px 2px;
-  background: transparent;
-  color: #8f96a3;
-  font-size: clamp(12px, 1.45vw, 20px);
+.el-form-item {
+  margin-bottom: 0;
+  width: 100%;
 }
 
-.role-tip {
-  margin: 10px 0 0;
-  color: #98a7bc;
-  font-size: clamp(10px, 1vw, 13px);
-  letter-spacing: 0.04em;
-}
-
-input:focus {
-  outline: none;
-  border-bottom-color: #84daf4;
+.code-row :deep(.el-form-item__content) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
 }
 
 .switch-link {
   margin-top: 10px;
-  display: inline-block;
+  display: inline-flex;
   color: #95a6bf;
-  font-size: clamp(10px, 1vw, 13px);
-  text-decoration: none;
+  font-size: clamp(14px, 1.4vw, 18px);
+  font-weight: 600;
   border: 1px solid #d2d8e1;
-  padding: 4px 8px;
+  padding: 8px 14px;
+}
+
+:deep(.switch-link .el-link__inner) {
+  color: #95a6bf;
 }
 
 .arrow {
@@ -196,6 +228,11 @@ input:focus {
   border-bottom: 3px solid #56d3f6;
 }
 
+.left-mark-register {
+  left: 10%;
+  bottom: 14%;
+}
+
 .enter-flag {
   position: absolute;
   right: 16%;
@@ -215,23 +252,77 @@ input:focus {
   cursor: pointer;
 }
 
+.enter-flag-login {
+  bottom: 6%;
+}
+
+:deep(.el-input__wrapper) {
+  border-radius: 0;
+  box-shadow: inset 0 -2px 0 #d7dce4;
+  background: transparent;
+  padding: 6px 2px;
+  min-height: 40px;
+}
+
+:deep(.el-input__inner) {
+  color: #8f96a3;
+  font-size: clamp(12px, 1.45vw, 20px);
+}
+
+:deep(.el-input__wrapper.is-focus) {
+  box-shadow: inset 0 -2px 0 #84daf4;
+}
+
+:deep(.el-form-item__content),
+:deep(.el-input) {
+  width: 100%;
+}
+
+:deep(.el-input__inner::placeholder) {
+  color: #a8b2bf;
+}
+
+:deep(.el-input__clear),
+:deep(.el-input__password) {
+  color: #9ca7b6;
+}
+
+:deep(.enter-flag.el-button) {
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  line-height: 1.2;
+}
+
+.code-button {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 0;
+}
+
+:deep(.enter-flag .el-button__text) {
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+}
+
 .dot {
   justify-self: center;
   font-size: 28px;
   line-height: 1;
 }
 
-.bottom-lines {
-  position: absolute;
-  right: 17%;
-  bottom: -22px;
-  width: 82px;
-  height: 52px;
-  border-right: 4px solid #56d3f6;
-  border-bottom: 4px solid #56d3f6;
+.enter-text {
+  font-size: clamp(24px, 2.3vw, 34px);
 }
 
 @media (max-width: 760px) {
   .triangle-wrap { width: 96vw; }
+
+  .code-row :deep(.el-form-item__content) {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
