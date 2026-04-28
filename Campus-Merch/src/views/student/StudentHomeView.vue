@@ -1,32 +1,46 @@
 <script setup>
-import { reactive } from 'vue'
+import { onMounted, reactive, ref, computed } from 'vue'
+import { getMyOrders, getProducts } from '../../api'
+import { useAuthStore } from '../../stores/auth'
+
+const authStore = useAuthStore()
 
 const quickStats = reactive([
-  { label: '可预订商品', value: 24, tip: '支持分类筛选与关键词检索' },
-  { label: '我的待收货', value: 3, tip: '已通过审核，等待发放' },
-  { label: '待补交设计稿', value: 2, tip: 'booked 状态可继续上传' },
+  { label: '可预订商品', value: 0, tip: '支持分类筛选与关键词检索' },
+  { label: '我的待收货', value: 0, tip: '已通过审核，等待发放' },
+  { label: '待补交设计稿', value: 0, tip: 'booked 状态可继续上传' },
 ])
 
-const actions = [
-  {
-    title: '浏览商品大厅',
-    desc: '查看文创/活动物料详情，按分类和价格筛选后提交预订。',
-    route: '/products',
-    btn: '去选商品',
-  },
-  {
-    title: '上传定制图案',
-    desc: '仅对已预订订单上传设计稿，支持 jpg/png/pdf/ai/psd。',
-    route: '/orders',
-    btn: '去上传',
-  },
-  {
-    title: '查看我的订单',
-    desc: '跟踪订单从 booked 到 completed 的全过程状态。',
-    route: '/orders',
-    btn: '查看订单',
-  },
-]
+const loading = ref(false)
+
+const loadStats = async () => {
+  loading.value = true
+  try {
+    const [{ data: orders }, { data: products }] = await Promise.all([
+      getMyOrders(),
+      getProducts({ status: 'online' }),
+    ])
+    quickStats[0].value = products.total || products.list.length
+    quickStats[1].value = orders.filter(o => o.status === 'ready').length
+    quickStats[2].value = orders.filter(o => o.status === 'booked').length
+  } catch (error) {
+    console.error('加载统计数据失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadStats)
+
+const userInfo = computed(() => {
+  const profile = authStore.profile || {}
+  return {
+    name: profile.name || profile.username || '未登录',
+    userId: profile.user_id || '-',
+    role: profile.role === 'admin' ? '管理员' : '学生',
+    email: profile.email || '-',
+  }
+})
 </script>
 
 <template>
@@ -34,7 +48,7 @@ const actions = [
     <header class="hero">
       <p class="tag">STUDENT PORTAL</p>
       <h1>校园文创预订中心</h1>
-      <p>学生登录后默认进入此页面，可完成浏览商品、提交预订、上传设计稿和跟踪订单进度。</p>
+      <p></p>
     </header>
 
     <div class="stats-grid">
@@ -45,12 +59,26 @@ const actions = [
       </article>
     </div>
 
-    <div class="action-grid">
-      <article v-for="item in actions" :key="item.title" class="action-card">
-        <h2>{{ item.title }}</h2>
-        <p>{{ item.desc }}</p>
-        <router-link :to="item.route" class="action-btn">{{ item.btn }}</router-link>
-      </article>
+    <div class="user-info-card">
+      <h2>个人信息</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">用户名：</span>
+          <span class="info-value">{{ userInfo.name }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">用户ID：</span>
+          <span class="info-value">{{ userInfo.userId }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">角色：</span>
+          <span class="info-value">{{ userInfo.role }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">邮箱：</span>
+          <span class="info-value">{{ userInfo.email }}</span>
+        </div>
+      </div>
     </div>
   </section>
 </template>
@@ -86,18 +114,50 @@ h1 {
   color: #4a5149;
 }
 
-.stats-grid,
-.action-grid {
+.stats-grid {
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.stat-card,
-.action-card {
+.stat-card {
   border: 2px solid #2f322e;
   background: #f8f4ea;
   padding: 14px;
+}
+
+.user-info-card {
+  border: 2px solid #2f322e;
+  background: #f8f4ea;
+  padding: 20px;
+  margin-top: 12px;
+}
+
+.user-info-card h2 {
+  margin: 0 0 16px;
+  color: #2b332b;
+  font-size: 22px;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  gap: 8px;
+}
+
+.info-label {
+  color: #596155;
+  font-weight: bold;
+}
+
+.info-value {
+  color: #2d322d;
 }
 
 .stat-label {
@@ -119,31 +179,12 @@ h1 {
   font-size: 13px;
 }
 
-h2 {
-  margin: 0 0 8px;
-  color: #2b332b;
-  font-size: 22px;
-  font-family: Georgia, 'Times New Roman', serif;
-}
-
-.action-card p {
-  margin: 0 0 12px;
-  color: #4e5751;
-  min-height: 42px;
-}
-
-.action-btn {
-  text-decoration: none;
-  display: inline-block;
-  border: 1px solid #2f322e;
-  padding: 8px 12px;
-  color: #2f322e;
-  background: #efe8d8;
-}
-
 @media (max-width: 980px) {
-  .stats-grid,
-  .action-grid {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .info-grid {
     grid-template-columns: 1fr;
   }
 }
