@@ -54,13 +54,17 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem('campus_merch_profile', JSON.stringify(profile.value))
   }
 
-  const register = async ({ username, password }) => {
-    if (!username || !password) throw new Error('请填写用户名和密码')
+  const register = async ({ username, name, email, verificationCode, password }) => {
+    if (!username || !name || !email || !verificationCode || !password) {
+      throw new Error('请完整填写注册信息')
+    }
     const duplicated = users.value.some((user) => user.username === username)
     if (duplicated) throw new Error('用户名已存在')
 
     users.value.push({
       username,
+      name,
+      email,
       password,
       role: 'student',
     })
