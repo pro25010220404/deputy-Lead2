@@ -1,6 +1,9 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { completeOrder, exportOrders, getMyOrders, uploadOrderDesign } from '../../api'
+import { useRoute } from 'vue-router'
+import { completeOrder, getMyOrders, uploadOrderDesign } from '../../api'
+
+const route = useRoute()
 
 const orders = ref([])
 const message = ref('')
@@ -47,33 +50,25 @@ const handleComplete = async (orderId) => {
   }
 }
 
-const handleExport = async () => {
-  try {
-    const { data } = await exportOrders({ from: 'my-orders' })
-    if (data.downloadUrl?.startsWith('http')) {
-      window.open(data.downloadUrl, '_blank')
-      message.value = '报表导出成功，已打开下载链接'
-    } else {
-      message.value = `报表已生成：${data.downloadUrl}`
-    }
-  } catch (error) {
-    message.value = error.message
-  }
-}
 
-onMounted(loadOrders)
+
+onMounted(() => {
+  if (route.query.success === '1') {
+    alert('预订成功！')
+  }
+  loadOrders()
+})
 </script>
 
 <template>
   <section class="page-wrap">
     <header class="hero">
       <h1>我的订单</h1>
-      <p>查看个人预订记录，上传定制稿、确认收货并导出记录。</p>
+      <p>查看个人预订记录，上传定制稿、确认收货。</p>
     </header>
 
     <article class="card">
       <p v-if="message" class="message">{{ message }}</p>
-      <button class="btn-primary" @click="handleExport">导出报表</button>
       <p v-if="loading" class="loading">加载中...</p>
       <div class="list">
         <article v-for="item in orders" :key="item.id" class="order-item">
