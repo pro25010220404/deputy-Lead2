@@ -32,6 +32,8 @@ const loadStats = async () => {
 
 onMounted(loadStats)
 
+const avatarInput = ref(null)
+
 const userInfo = computed(() => {
   const profile = authStore.profile || {}
   return {
@@ -39,8 +41,27 @@ const userInfo = computed(() => {
     userId: profile.user_id || '-',
     role: profile.role === 'admin' ? '管理员' : '学生',
     email: profile.email || '-',
+    avatar: profile.avatar || '',
   }
 })
+
+const handleUploadAvatar = () => {
+  avatarInput.value?.click()
+}
+
+const onAvatarChange = (event) => {
+  const file = event.target.files?.[0]
+  if (!file) return
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    if (authStore.profile) {
+      authStore.profile.avatar = e.target.result
+      localStorage.setItem('campus_merch_profile', JSON.stringify(authStore.profile))
+    }
+  }
+  reader.readAsDataURL(file)
+}
 </script>
 
 <template>
@@ -61,12 +82,22 @@ const userInfo = computed(() => {
 
     <el-card class="user-info-card" shadow="never">
       <h2>个人信息</h2>
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="用户名">{{ userInfo.name }}</el-descriptions-item>
-        <el-descriptions-item label="用户ID">{{ userInfo.userId }}</el-descriptions-item>
-        <el-descriptions-item label="角色">{{ userInfo.role }}</el-descriptions-item>
-        <el-descriptions-item label="邮箱">{{ userInfo.email }}</el-descriptions-item>
-      </el-descriptions>
+      <div class="user-info-content">
+        <div class="avatar-section">
+          <div class="avatar">
+            <img v-if="userInfo.avatar" :src="userInfo.avatar" :alt="userInfo.name" />
+            <div v-else class="avatar-placeholder">{{ userInfo.name.charAt(0) }}</div>
+          </div>
+          <el-button size="small" type="primary" @click="handleUploadAvatar">更换头像</el-button>
+          <input type="file" ref="avatarInput" accept="image/*" hidden @change="onAvatarChange" />
+        </div>
+        <el-descriptions :column="2" border class="info-descriptions">
+          <el-descriptions-item label="用户名">{{ userInfo.name }}</el-descriptions-item>
+          <el-descriptions-item label="用户ID">{{ userInfo.userId }}</el-descriptions-item>
+          <el-descriptions-item label="角色">{{ userInfo.role }}</el-descriptions-item>
+          <el-descriptions-item label="邮箱">{{ userInfo.email }}</el-descriptions-item>
+        </el-descriptions>
+      </div>
     </el-card>
   </section>
 </template>
@@ -130,6 +161,47 @@ h1 {
   padding: 20px;
 }
 
+.user-info-content {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #2a6f67;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #2f322e;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  font-size: 40px;
+  color: #fff;
+  font-weight: bold;
+}
+
+.info-descriptions {
+  flex: 1;
+}
+
 :deep(.user-info-card .el-descriptions__body),
 :deep(.user-info-card .el-descriptions__table),
 :deep(.user-info-card .el-descriptions__cell),
@@ -168,6 +240,15 @@ h1 {
 @media (max-width: 980px) {
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .user-info-content {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .info-descriptions {
+    width: 100%;
   }
 }
 </style>
