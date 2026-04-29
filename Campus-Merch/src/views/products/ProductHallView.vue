@@ -81,12 +81,11 @@ onMounted(fetchProducts)
     <el-card class="card" shadow="never">
       <el-alert v-if="message" class="message" :title="message" type="info" :closable="false" />
       <el-form class="toolbar" inline @submit.prevent>
-        <el-form-item>
-          <el-input v-model="filters.keyword" placeholder="关键词搜索" clearable />
+        <el-form-item label="关键词：">
+          <el-input v-model="filters.keyword" placeholder="输入关键词搜索" clearable style="width: 200px" />
         </el-form-item>
-        <el-form-item>
-          <el-select v-model="filters.category" placeholder="全部分类" clearable>
-            <el-option label="全部分类" value="" />
+        <el-form-item label="分类：">
+          <el-select v-model="filters.category" placeholder="请选择分类" clearable style="width: 150px">
             <el-option label="服饰" value="服饰" />
             <el-option label="周边" value="周边" />
             <el-option label="文具" value="文具" />
@@ -115,13 +114,21 @@ onMounted(fetchProducts)
     </el-card>
 
     <div v-if="detail" class="grid">
-      <el-card class="panel" shadow="never">
+      <el-card class="panel detail-panel" shadow="never">
         <h3>商品详情</h3>
-        <p>{{ detail.name }} / {{ detail.spec }}</p>
-        <p>定制说明：{{ detail.customRule }}</p>
-        <p>库存：{{ detail.stock - detail.reservedQty }}</p>
-        <p>已售量：{{ detail.soldQty || 0 }}</p>
-        <p class="api">GET /api/products/{id}</p>
+        <div class="detail-content">
+          <div class="detail-info">
+            <p>{{ detail.name }} / {{ detail.spec }}</p>
+            <p>定制说明：{{ detail.customRule }}</p>
+            <p>库存：{{ detail.stock - detail.reservedQty }}</p>
+            <p>已售量：{{ detail.soldQty || 0 }}</p>
+            <p class="api">GET /api/products/{id}</p>
+          </div>
+          <div class="product-image">
+            <img v-if="detail.coverUrl" :src="detail.coverUrl" :alt="detail.name" />
+            <div v-else class="no-image">暂无图片</div>
+          </div>
+        </div>
       </el-card>
 
       <el-card class="panel" shadow="never">
@@ -169,5 +176,57 @@ h3 { margin: 0; color: #2d322d; font-family: Georgia, 'Times New Roman', serif; 
 :deep(.panel .el-input-number__wrapper) {
   background: #fcfbf6 !important;
 }
-@media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } }
+
+.detail-panel :deep(.el-card__body) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.detail-content {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+}
+
+.detail-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.product-image {
+  width: 260px;
+  height: 200px;
+  min-width: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-image {
+  color: #999;
+  font-size: 14px;
+}
+
+@media (max-width: 1000px) { 
+  .grid { grid-template-columns: 1fr; }
+  .detail-content {
+    flex-direction: column;
+  }
+  .product-image {
+    width: 100%;
+    height: 180px;
+  }
+}
 </style>
