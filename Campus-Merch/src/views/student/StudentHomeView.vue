@@ -45,41 +45,29 @@ const userInfo = computed(() => {
 
 <template>
   <section class="student-page">
-    <header class="hero">
+    <el-card class="hero" shadow="never">
       <p class="tag">STUDENT PORTAL</p>
       <h1>校园文创预订中心</h1>
       <p></p>
-    </header>
+    </el-card>
 
     <div class="stats-grid">
-      <article v-for="item in quickStats" :key="item.label" class="stat-card">
+      <el-card v-for="item in quickStats" :key="item.label" class="stat-card" shadow="hover">
         <p class="stat-label">{{ item.label }}</p>
-        <p class="stat-value">{{ item.value }}</p>
+        <el-statistic class="stat-value" :value="item.value" />
         <p class="stat-tip">{{ item.tip }}</p>
-      </article>
+      </el-card>
     </div>
 
-    <div class="user-info-card">
+    <el-card class="user-info-card" shadow="never">
       <h2>个人信息</h2>
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="info-label">用户名：</span>
-          <span class="info-value">{{ userInfo.name }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">用户ID：</span>
-          <span class="info-value">{{ userInfo.userId }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">角色：</span>
-          <span class="info-value">{{ userInfo.role }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">邮箱：</span>
-          <span class="info-value">{{ userInfo.email }}</span>
-        </div>
-      </div>
-    </div>
+      <el-descriptions :column="2" border>
+        <el-descriptions-item label="用户名">{{ userInfo.name }}</el-descriptions-item>
+        <el-descriptions-item label="用户ID">{{ userInfo.userId }}</el-descriptions-item>
+        <el-descriptions-item label="角色">{{ userInfo.role }}</el-descriptions-item>
+        <el-descriptions-item label="邮箱">{{ userInfo.email }}</el-descriptions-item>
+      </el-descriptions>
+    </el-card>
   </section>
 </template>
 
@@ -92,7 +80,6 @@ const userInfo = computed(() => {
 .hero {
   border: 2px solid #2f322e;
   background: #f4f0e6;
-  padding: 20px;
 }
 
 .tag {
@@ -123,14 +110,34 @@ h1 {
 .stat-card {
   border: 2px solid #2f322e;
   background: #f8f4ea;
-  padding: 14px;
 }
 
 .user-info-card {
   border: 2px solid #2f322e;
   background: #f8f4ea;
-  padding: 20px;
   margin-top: 12px;
+}
+
+:deep(.hero .el-card__body) {
+  padding: 20px;
+}
+
+:deep(.stat-card .el-card__body) {
+  padding: 14px;
+}
+
+:deep(.user-info-card .el-card__body) {
+  padding: 20px;
+}
+
+:deep(.user-info-card .el-descriptions__body),
+:deep(.user-info-card .el-descriptions__table),
+:deep(.user-info-card .el-descriptions__cell),
+:deep(.user-info-card .el-descriptions__label),
+:deep(.user-info-card .el-descriptions__content) {
+  background: #f8f4ea !important;
+  color: #2d322d;
+  border-color: #9f9a8d !important;
 }
 
 .user-info-card h2 {
@@ -140,35 +147,14 @@ h1 {
   font-family: Georgia, 'Times New Roman', serif;
 }
 
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.info-item {
-  display: flex;
-  gap: 8px;
-}
-
-.info-label {
-  color: #596155;
-  font-weight: bold;
-}
-
-.info-value {
-  color: #2d322d;
-}
-
 .stat-label {
   margin: 0;
   color: #596155;
   font-size: 13px;
 }
 
-.stat-value {
+:deep(.stat-value .el-statistic__content) {
   margin: 8px 0;
-  font-size: 36px;
   color: #1f5c54;
   font-family: Georgia, 'Times New Roman', serif;
 }
@@ -181,10 +167,6 @@ h1 {
 
 @media (max-width: 980px) {
   .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .info-grid {
     grid-template-columns: 1fr;
   }
 }

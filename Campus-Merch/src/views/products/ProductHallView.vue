@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import {
   createOrder,
   getProductDetail,
@@ -59,7 +60,7 @@ const handleCreateOrder = async () => {
   } catch (error) {
     console.error('订单创建失败:', error)
     message.value = error.message
-    alert('预订失败: ' + error.message)
+    ElMessage.error('预订失败: ' + error.message)
   }
 }
 
@@ -72,91 +73,101 @@ onMounted(fetchProducts)
 
 <template>
   <section class="page-wrap">
-    <header class="hero">
+    <el-card class="hero" shadow="never">
       <h1>商品大厅</h1>
       <p>按分类/关键词筛选商品，支持提交预订。</p>
-    </header>
+    </el-card>
 
-    <article class="card">
-      <p v-if="message" class="message">{{ message }}</p>
-      <div class="toolbar">
-        <input v-model="filters.keyword" placeholder="关键词搜索" />
-        <select v-model="filters.category">
-          <option value="">全部分类</option>
-          <option value="服饰">服饰</option>
-          <option value="周边">周边</option>
-          <option value="文具">文具</option>
-        </select>
-        <button class="btn-primary" @click="fetchProducts">查询商品</button>
-      </div>
+    <el-card class="card" shadow="never">
+      <el-alert v-if="message" class="message" :title="message" type="info" :closable="false" />
+      <el-form class="toolbar" inline @submit.prevent>
+        <el-form-item>
+          <el-input v-model="filters.keyword" placeholder="关键词搜索" clearable />
+        </el-form-item>
+        <el-form-item>
+          <el-select v-model="filters.category" placeholder="全部分类" clearable>
+            <el-option label="全部分类" value="" />
+            <el-option label="服饰" value="服饰" />
+            <el-option label="周边" value="周边" />
+            <el-option label="文具" value="文具" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="fetchProducts">查询商品</el-button>
+        </el-form-item>
+      </el-form>
 
-      <table>
-        <thead>
-          <tr>
-            <th>商品名</th>
-            <th>分类</th>
-            <th>库存</th>
-            <th>价格</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in products" :key="item.id">
-            <td>{{ item.name }}</td>
-            <td>{{ item.category }}</td>
-            <td>{{ item.stock - item.reservedQty }}</td>
-            <td>{{ item.price }}元</td>
-            <td><button class="btn-ghost" @click="handleViewDetail(item.id)">查看详情</button></td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p v-if="loading" class="loading">加载中...</p>
-    </article>
+      <el-table :data="products" stripe v-loading="loading">
+        <el-table-column prop="name" label="商品名" min-width="180" />
+        <el-table-column prop="category" label="分类" width="120" />
+        <el-table-column label="库存" width="100">
+          <template #default="{ row }">{{ row.stock - row.reservedQty }}</template>
+        </el-table-column>
+        <el-table-column label="价格" width="120">
+          <template #default="{ row }">{{ row.price }}元</template>
+        </el-table-column>
+        <el-table-column label="操作" width="120">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="handleViewDetail(row.id)">查看详情</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
 
     <div v-if="detail" class="grid">
-      <article class="panel">
+      <el-card class="panel" shadow="never">
         <h3>商品详情</h3>
         <p>{{ detail.name }} / {{ detail.spec }}</p>
         <p>定制说明：{{ detail.customRule }}</p>
         <p>库存：{{ detail.stock - detail.reservedQty }}</p>
         <p>已售量：{{ detail.soldQty || 0 }}</p>
         <p class="api">GET /api/products/{id}</p>
-      </article>
+      </el-card>
 
-      <article class="panel">
+      <el-card class="panel" shadow="never">
         <h3>提交预订</h3>
-        <input v-model="orderForm.quantity" type="number" min="1" placeholder="数量" />
-        <input v-model="orderForm.preference" placeholder="尺寸/颜色偏好" />
-        <input v-model="orderForm.remark" placeholder="备注" />
-        <button class="btn-primary" @click="handleCreateOrder">提交预订</button>
-      </article>
-
-
+        <el-input-number v-model="orderForm.quantity" :min="1" />
+        <el-input v-model="orderForm.preference" placeholder="尺寸/颜色偏好" />
+        <el-input v-model="orderForm.remark" placeholder="备注" />
+        <el-button type="primary" @click="handleCreateOrder">提交预订</el-button>
+      </el-card>
     </div>
   </section>
 </template>
 
 <style scoped>
 .page-wrap { display: grid; gap: 14px; }
-.hero { background: #f4f0e6; border: 2px solid #2f322e; padding: 20px; }
+.hero { border: 2px solid #2f322e; background: #f4f0e6; }
 h1 { margin: 0 0 8px; color: #2d322d; font-size: 36px; font-family: Georgia, 'Times New Roman', serif; }
 .hero p { margin: 0; color: #3e413d; }
-.card { background: #f8f4ea; border: 2px solid #2f322e; padding: 16px; }
-.message { color: #245c58; margin: 0 0 10px; }
+.card { border: 2px solid #2f322e; background: #f8f4ea; }
+.message { margin: 0 0 10px; }
 .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-input, select { border: 1px solid #2f322e; padding: 8px; background: #fcfbf6; color: #30342f; }
-table { width: 100%; border-collapse: collapse; background: #fbf7ec; border: 2px solid #2f322e; }
-th, td { padding: 10px; border-bottom: 1px solid #9f9a8d; text-align: left; }
-th { color: #2d322d; background: #efe8d8; }
-.import-btn { position: relative; overflow: hidden; border: 1px solid #2f322e; padding: 8px; background: #f3ebda; cursor: pointer; color: #2f322e; }
-.import-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.panel { border: 2px solid #2f322e; background: #f8f4ea; padding: 14px; display: grid; gap: 8px; }
+.panel { border: 2px solid #2f322e; background: #f8f4ea; display: grid; gap: 10px; }
 h3 { margin: 0; color: #2d322d; font-family: Georgia, 'Times New Roman', serif; }
-.loading { color: #4f5e5a; margin-top: 10px; }
 .api { font-family: Consolas, monospace; color: #245c58; font-size: 12px; }
-.btn-primary { border: 1px solid #2f322e; background: #245c58; color: #fff; padding: 8px 12px; cursor: pointer; }
-.btn-ghost { border: 1px solid #2f322e; background: #f4ede0; color: #2f322e; padding: 6px 10px; cursor: pointer; }
+:deep(.hero .el-card__body) { padding: 20px; }
+:deep(.card .el-card__body) { padding: 16px; }
+:deep(.panel .el-card__body) { padding: 14px; }
+:deep(.card .el-table),
+:deep(.card .el-table__inner-wrapper),
+:deep(.card .el-table tr),
+:deep(.card .el-table th.el-table__cell),
+:deep(.card .el-table td.el-table__cell) {
+  background: #fbf7ec !important;
+  color: #2d322d;
+}
+
+:deep(.card .el-table th.el-table__cell) {
+  background: #efe8d8 !important;
+}
+
+:deep(.card .el-input__wrapper),
+:deep(.card .el-select__wrapper),
+:deep(.panel .el-input__wrapper),
+:deep(.panel .el-input-number__wrapper) {
+  background: #fcfbf6 !important;
+}
 @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } }
 </style>
