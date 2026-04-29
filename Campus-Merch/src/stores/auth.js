@@ -19,12 +19,14 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => Boolean(token.value))
   const isAdmin = computed(() => profile.value?.role === 'admin')
 
-  const login = async ({ username, password }) => {
-    // 约定：admin 账号走管理员校验；其余任意输入默认作为学生登录
-    if (username !== 'admin') {
-      if (!username || !password) {
-        throw new Error('请填写用户名和密码')
-      }
+  const login = async ({ username, password, verificationCode, loginType = 'password' }) => {
+    if (!username) throw new Error('请填写账号')
+    if (loginType === 'password' && !password) throw new Error('请填写密码')
+    if (loginType === 'code' && !verificationCode) throw new Error('请填写验证码')
+
+    const existingByName = users.value.find((user) => user.username === username)
+    // 保留原有 mock 兼容：非 admin 账号即使未注册也允许密码登录
+    if (!existingByName && loginType === 'password' && username !== 'admin') {
       const nextToken = `mock-token-${Date.now()}`
       token.value = nextToken
       profile.value = {
@@ -37,18 +39,18 @@ export const useAuthStore = defineStore('auth', () => {
       return
     }
 
-    const existing = users.value.find(
-      (user) => user.username === username && user.password === password
-    )
-    if (!existing) {
+    if (!existingByName) throw new Error('账号不存在')
+    if (loginType === 'password' && existingByName.password !== password) {
       throw new Error('用户名或密码错误')
     }
+
     const nextToken = `mock-token-${Date.now()}`
     token.value = nextToken
     profile.value = {
-      name: existing.role === 'admin' ? '校园文创管理员' : '学生用户',
-      role: existing.role,
-      username: existing.username,
+      name: existingByName.role === 'admin' ? '校园文创管理员' : existingByName.name || '学生用户',
+      role: existingByName.role,
+      username: existingByName.username,
+      email: existingByName.email || '',
     }
     localStorage.setItem('campus_merch_token', nextToken)
     localStorage.setItem('campus_merch_profile', JSON.stringify(profile.value))
