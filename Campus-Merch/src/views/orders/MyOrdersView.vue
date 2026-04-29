@@ -13,6 +13,8 @@ const statusLabelMap = {
   booked: '已预订',
   design_pending: '定制待审',
   ready: '待发货',
+  shipping: '发货中',
+  delivered: '已送达',
   completed: '已完成',
   rejected: '已驳回',
 }
@@ -75,7 +77,7 @@ onMounted(() => {
         <el-card v-for="item in orders" :key="item.id" class="order-item" shadow="hover">
           <div class="top-line">
             <strong>{{ item.id }}</strong>
-            <el-tag class="status" :type="item.status === 'ready' ? 'success' : item.status === 'rejected' ? 'danger' : item.status === 'design_pending' ? 'warning' : 'info'">
+            <el-tag class="status" :type="item.status === 'delivered' ? 'success' : item.status === 'rejected' ? 'danger' : item.status === 'design_pending' ? 'warning' : item.status === 'shipping' ? 'primary' : 'info'">
               {{ statusLabelMap[item.status] || item.status }}
             </el-tag>
           </div>
@@ -87,7 +89,7 @@ onMounted(() => {
               上传设计稿
               <input type="file" accept=".jpg,.jpeg,.png,.pdf,.ai,.psd" @change="handleUploadDesign(item.id, $event)" />
             </label>
-            <el-button v-if="item.status === 'ready'" type="primary" plain @click="handleComplete(item.id)">确认收货</el-button>
+            <el-button v-if="item.status === 'delivered'" type="primary" plain @click="handleComplete(item.id)">确认收货</el-button>
           </div>
         </el-card>
       </div>

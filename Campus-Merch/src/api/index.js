@@ -86,7 +86,7 @@ export async function completeOrder(orderId) {
   await wait()
   const order = mockDb.orders.find((item) => item.id === orderId)
   if (!order) throw new Error('订单不存在')
-  if (!['ready'].includes(order.status)) throw new Error('当前状态不可确认收货')
+  if (!['delivered'].includes(order.status)) throw new Error('仅已送达订单可确认收货')
   order.status = 'completed'
   return ok(order, '确认收货成功')
 }

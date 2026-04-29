@@ -184,7 +184,7 @@ export const mockDb = {
       quantity: 60,
       preference: '银色',
       remark: '',
-      status: 'ready',
+      status: 'delivered',
       designUrl: '',
       userId: 'u1001',
       userName: 'demo',
