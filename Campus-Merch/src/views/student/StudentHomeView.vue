@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, reactive, ref, computed } from 'vue'
-import { getMyOrders, getProducts } from '../../api'
+import { getMyOrders, getProducts } from '../../services/campusMerch'
 import { useAuthStore } from '../../stores/auth'
 
 const authStore = useAuthStore()

@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { getAdminOrders, reviewOrder } from '../../api'
+import { getAdminOrders, reviewOrder } from '../../services/campusMerch'
 
 const orders = ref([])
 const remark = ref('')

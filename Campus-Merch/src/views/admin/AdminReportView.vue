@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { exportOrders } from '../../api'
+import { exportOrders } from '../../services/campusMerch'
 
 const loading = ref(false)
 const message = ref('')

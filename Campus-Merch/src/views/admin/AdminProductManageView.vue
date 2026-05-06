@@ -5,7 +5,7 @@ import {
   getProducts,
   importProductsByExcel,
   updateProduct,
-} from '../../api'
+} from '../../services/campusMerch'
 
 const loading = ref(false)
 const message = ref('')

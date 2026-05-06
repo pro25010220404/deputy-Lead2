@@ -6,7 +6,7 @@ import {
   createOrder,
   getProductDetail,
   getProducts,
-} from '../../api'
+} from '../../services/campusMerch'
 
 const router = useRouter()
 

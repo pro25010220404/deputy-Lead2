@@ -1,6 +1,7 @@
 const now = () => new Date().toISOString()
 
-export const mockDb = {
+/** 内存 mock 数据源（仅开发 / VITE_USE_MOCK 时使用） */
+export const campusMerchState = {
   products: [
     {
       id: 1,
@@ -207,5 +208,7 @@ export const mockDb = {
   auditLogs: [],
 }
 
-export const nextProductId = () =>
-  (mockDb.products.at(-1)?.id ? Number(mockDb.products.at(-1).id) : 0) + 1
+export function nextCampusProductId() {
+  const last = campusMerchState.products.at(-1)?.id
+  return (last ? Number(last) : 0) + 1
+}

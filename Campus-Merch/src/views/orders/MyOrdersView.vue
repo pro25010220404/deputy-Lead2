@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { completeOrder, getMyOrders, uploadOrderDesign } from '../../api'
+import { completeOrder, getMyOrders, uploadOrderDesign } from '../../services/campusMerch'
 
 const route = useRoute()
 

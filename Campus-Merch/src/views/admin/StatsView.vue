@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { getAdminStats } from '../../api'
+import { getAdminStats } from '../../services/campusMerch'
 
 const stats = ref({
   todayOrders: 0,
