@@ -8,21 +8,24 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const profileLabel = computed(() => authStore.profile?.name || '未登录用户')
-const navItems = computed(() =>
+
+const navPrimary = computed(() => [
+  { label: '商品大厅', to: '/products' },
+  { label: '我的订单', to: '/orders' },
+  {
+    label: '个人中心',
+    to: authStore.isAdmin ? '/admin/stats' : '/student',
+  },
+])
+
+const navSecondary = computed(() =>
   authStore.isAdmin
     ? [
         { label: '商品维护', to: '/admin/products' },
-        { label: '商品大厅', to: '/products' },
-        { label: '我的订单', to: '/orders' },
         { label: '订单审核', to: '/admin/review' },
-        { label: '数据看板', to: '/admin/stats' },
         { label: '报表导出', to: '/admin/reports' },
       ]
-    : [
-        { label: '学生主页', to: '/student' },
-        { label: '商品大厅', to: '/products' },
-        { label: '我的订单', to: '/orders' },
-      ]
+    : []
 )
 
 const handleLogout = () => {
@@ -33,22 +36,39 @@ const handleLogout = () => {
 
 <template>
   <div class="main-shell">
-    <aside class="side-nav">
-      <div class="brand">CampusMerch v2.0</div>
-      <p class="profile">{{ profileLabel }}</p>
-      <nav>
-        <RouterLink
-          v-for="item in navItems"
-          :key="item.to"
-          :to="item.to"
-          class="nav-link"
-          :class="{ active: route.path === item.to }"
-        >
-          {{ item.label }}
-        </RouterLink>
+    <header class="site-header">
+      <div class="header-brand">
+        <div class="brand">CampusMerch v2.0</div>
+        <p class="profile">{{ profileLabel }}</p>
+      </div>
+      <nav class="header-nav" aria-label="主导航">
+        <div class="nav-group nav-group--primary">
+          <RouterLink
+            v-for="item in navPrimary"
+            :key="item.to"
+            :to="item.to"
+            class="nav-link"
+            :class="{ active: route.path === item.to }"
+          >
+            {{ item.label }}
+          </RouterLink>
+        </div>
+        <div v-if="navSecondary.length" class="nav-group nav-group--secondary">
+          <RouterLink
+            v-for="item in navSecondary"
+            :key="item.to"
+            :to="item.to"
+            class="nav-link"
+            :class="{ active: route.path === item.to }"
+          >
+            {{ item.label }}
+          </RouterLink>
+        </div>
       </nav>
-      <button class="logout-btn" @click="handleLogout">退出登录</button>
-    </aside>
+      <div class="header-actions">
+        <button class="logout-btn" type="button" @click="handleLogout">退出登录</button>
+      </div>
+    </header>
 
     <section class="content-panel">
       <router-view />
@@ -59,73 +79,123 @@ const handleLogout = () => {
 <style scoped>
 .main-shell {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 250px 1fr;
+  display: flex;
+  flex-direction: column;
   background: #e9e6dc;
   color: #2f322e;
 }
 
-.side-nav {
+.site-header {
   background: #245c58;
   color: #f2efe5;
-  padding: 24px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 28px;
+  padding: 14px 22px;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.25);
+}
+
+.header-brand {
   display: flex;
   flex-direction: column;
-  border-right: 2px solid rgba(0, 0, 0, 0.25);
+  gap: 2px;
+  min-width: 0;
 }
 
 .brand {
-  font-size: 28px;
+  font-size: 27px;
   font-weight: 700;
   font-family: Georgia, 'Times New Roman', serif;
+  line-height: 1.15;
 }
 
 .profile {
-  margin: 8px 0 18px;
+  margin: 0;
   color: #c8dfdb;
-  font-size: 13px;
+  font-size: 14px;
 }
 
-nav {
+.header-nav {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px 72px;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.nav-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.nav-group--primary {
+  gap: 56px;
+}
+
+.nav-group--secondary {
+  gap: 36px;
+}
+
+@media (min-width: 900px) {
+  .header-nav {
+    justify-content: center;
+  }
 }
 
 .nav-link {
   text-decoration: none;
   color: #ecf3ef;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 10px 12px;
-  font-size: 14px;
+  border: none;
+  padding: 10px 4px;
+  font-size: 17px;
+  white-space: nowrap;
+  background: transparent;
 }
 
 .nav-link.active {
-  background: #f2efe4;
-  color: #253126;
-  border-color: #e5e0d2;
+  color: #f7f4ea;
+  font-weight: 600;
+  box-shadow: inset 0 -3px 0 0 rgba(247, 244, 234, 0.95);
+}
+
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
 }
 
 .logout-btn {
-  margin-top: auto;
-  padding: 9px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  padding: 10px 18px;
+  border: none;
   color: #eff5fd;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.12);
   cursor: pointer;
+  font-size: 16px;
+  border-radius: 6px;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .content-panel {
+  flex: 1;
   padding: 22px;
+  min-height: 0;
 }
 
-@media (max-width: 980px) {
-  .main-shell {
-    grid-template-columns: 1fr;
+@media (max-width: 640px) {
+  .site-header {
+    padding: 10px 14px;
   }
 
-  .side-nav {
-    gap: 14px;
+  .header-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
   }
 }
 </style>
