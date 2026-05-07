@@ -31,7 +31,12 @@ const routes = [
     children: [
       { path: '', redirect: '/admin/stats' },
       { path: 'student', name: 'student-home', component: StudentHomeView },
-      { path: 'products', name: 'products', component: ProductHallView },
+      {
+        path: 'products',
+        name: 'products',
+        component: ProductHallView,
+        meta: { contentFullBleed: true },
+      },
       { path: 'orders', name: 'orders', component: MyOrdersView },
       { path: 'admin/products', name: 'admin-products', component: AdminProductManageView, meta: { role: 'admin' } },
       { path: 'admin/review', name: 'admin-review', component: OrderReviewView, meta: { role: 'admin' } },

@@ -70,7 +70,7 @@ const handleLogout = async () => {
       </div>
     </header>
 
-    <section class="content-panel">
+    <section class="content-panel" :class="{ 'content-panel--flush': route.meta.contentFullBleed }">
       <router-view />
     </section>
   </div>
@@ -185,6 +185,10 @@ const handleLogout = async () => {
   flex: 1;
   padding: 22px;
   min-height: 0;
+}
+
+.content-panel--flush {
+  padding: 0;
 }
 
 @media (max-width: 640px) {
