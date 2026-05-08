@@ -198,7 +198,7 @@ const selectTab = (key) => {
         <div v-else class="orders-list">
           <div v-for="order in ordersData" :key="order.id" class="order-item">
             <div class="order-info">
-              <p class="order-id">订单号: {{ order.order_no }}</p>
+              <p class="order-id">{{ order.order_no.replace('ORD-', '') }}</p>
               <p class="order-product">{{ order.product_name }}</p>
               <p class="order-status">{{ order.status }}</p>
             </div>
@@ -356,11 +356,17 @@ const selectTab = (key) => {
 
 .content-card {
   background: #f8f4ea;
+  border: none;
+  box-shadow: none;
 }
 
 :deep(.content-card .el-card__body) {
   padding: 20px;
   background: #f8f4ea;
+}
+
+:deep(.content-card .el-card__header) {
+  border-bottom: none;
 }
 
 .content-card h3 {
@@ -465,7 +471,7 @@ const selectTab = (key) => {
 .order-item,
 .design-item {
   padding: 12px;
-  background: #fff;
+  background: #f8f4ea;
   border-radius: 8px;
 }
 

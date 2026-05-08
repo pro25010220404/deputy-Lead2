@@ -1,11 +1,13 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+
+const isSticky = ref(false)
 
 const profileLabel = computed(() => authStore.profile?.name || '未登录用户')
 
@@ -32,11 +34,23 @@ const handleLogout = async () => {
   await authStore.logout()
   router.push('/login')
 }
+
+const handleScroll = () => {
+  isSticky.value = window.scrollY > 50
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <template>
   <div class="main-shell">
-    <header id="site-header" class="site-header">
+    <header id="site-header" class="site-header" :class="{ 'site-header--sticky': isSticky }">
       <div class="header-brand">
         <div class="brand">CampusMerch v2.0</div>
         <p class="profile">{{ profileLabel }}</p>
@@ -94,6 +108,28 @@ const handleLogout = async () => {
   gap: 14px 28px;
   padding: 14px 22px;
   border-bottom: 2px solid rgba(0, 0, 0, 0.25);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.site-header--sticky {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .header-brand {

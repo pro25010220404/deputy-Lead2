@@ -76,7 +76,7 @@ onMounted(() => {
       <div class="list">
         <el-card v-for="item in orders" :key="item.id" class="order-item" shadow="hover">
           <div class="top-line">
-            <strong>{{ item.id }}</strong>
+            <strong>{{ item.id.replace('ORD-', '') }}</strong>
             <el-tag class="status" :type="item.status === 'delivered' ? 'success' : item.status === 'rejected' ? 'danger' : item.status === 'design_pending' ? 'warning' : item.status === 'shipping' ? 'primary' : 'info'">
               {{ statusLabelMap[item.status] || item.status }}
             </el-tag>
@@ -98,19 +98,23 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.page-wrap { display: grid; gap: 14px; }
-.hero { border: 2px solid #2f322e; background: #f4f0e6; }
-h1 { margin: 0 0 8px; color: #2d322d; font-size: 36px; font-family: Georgia, 'Times New Roman', serif; }
-.hero p { margin: 0; color: #3e413d; }
-.card { border: 2px solid #2f322e; background: #f8f4ea; }
-.message { margin-bottom: 10px; }
-.list { display: grid; gap: 10px; }
-.order-item { border: 2px solid #2f322e; background: #fbf7ec; display: grid; gap: 8px; }
+.page-wrap { display: block; background: #ebe8e0; min-height: 100vh; }
+.hero { border: none; background: #ebe8e0; box-shadow: none; margin-bottom: 0; }
+h1 { margin: 0 0 4px; color: #2d322d; font-size: 28px; font-family: Georgia, 'Times New Roman', serif; }
+.hero p { margin: 0; color: #3e413d; font-size: 14px; }
+.card { border: none; background: #ebe8e0; box-shadow: none; margin-top: 0; }
+.message { margin-bottom: 8px; background: #ebe8e0 !important; border: none !important; }
+:deep(.message .el-alert__icon) { color: #2a6f67; }
+:deep(.message .el-alert__title) { color: #2d322d; }
+.list { display: flex; flex-direction: column; gap: 0; }
+.order-item { border: none; background: #ebe8e0; display: grid; gap: 4px; padding: 10px 0; border-bottom: 1px solid #dcd9d0; }
+.order-item:last-child { border-bottom: none; }
 .top-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.file-upload { position: relative; width: fit-content; border: 1px solid #2f322e; padding: 8px 10px; cursor: pointer; overflow: hidden; color: #2f322e; background: #f4ede0; }
+.file-upload { position: relative; width: fit-content; padding: 6px 10px; cursor: pointer; overflow: hidden; color: #2a6f67; background: #dfdbd0; border-radius: 6px; font-size: 13px; }
 .file-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-:deep(.hero .el-card__body) { padding: 20px; }
-:deep(.card .el-card__body) { padding: 16px; }
-:deep(.order-item .el-card__body) { padding: 12px; }
+:deep(.hero .el-card__body) { padding: 12px 16px 8px; }
+:deep(.card .el-card__body) { padding: 0 16px; }
+:deep(.order-item .el-card__body) { padding: 0; }
+:deep(.el-card__header) { border-bottom: none; }
 </style>
