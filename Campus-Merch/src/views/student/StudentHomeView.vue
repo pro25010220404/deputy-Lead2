@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue'
 import { useAuthStore } from '../../stores/auth'
-import { getMyOrders, getProducts, getUserOrders } from '../../services/campusMerch'
+import { getMyOrders, getProducts } from '../../services/campusMerch'
 import { Star, StarFilled } from '@element-plus/icons-vue'
 
 const authStore = useAuthStore()
@@ -28,7 +28,7 @@ const userInfo = computed(() => {
   const profile = authStore.profile || {}
   return {
     name: profile.name || profile.username || '未登录',
-    userId: profile.user_id || '-',
+    userId: profile.userId ?? profile.user_id ?? '-',
     role: profile.role === 'admin' ? '管理员' : '学生',
     email: profile.email || '-',
     avatar: profile.avatar || '',
@@ -39,7 +39,7 @@ const loadStats = async () => {
   loading.value = true
   try {
     const [{ data: orders }, { data: products }] = await Promise.all([
-      getUserOrders(),
+      getMyOrders(),
       getProducts({ status: 'online' }),
     ])
     quickStats[1].value = orders.list?.filter(o => o.status === 'ready').length || 0

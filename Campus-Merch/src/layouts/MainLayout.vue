@@ -36,7 +36,7 @@ const handleLogout = async () => {
 
 <template>
   <div class="main-shell">
-    <header class="site-header">
+    <header id="site-header" class="site-header">
       <div class="header-brand">
         <div class="brand">CampusMerch v2.0</div>
         <p class="profile">{{ profileLabel }}</p>

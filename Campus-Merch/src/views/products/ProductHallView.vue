@@ -18,11 +18,17 @@ const router = useRouter()
 const heroSlides = [carousel1, carousel2, carousel3, carousel4]
 
 const catalogRef = ref(null)
-const HEADER_RESERVE_PX = 88
 const heroCarouselHeight = ref('560px')
 
+/** 轮播高度 = 视口高 − 主布局页眉实际高度（页眉换行时会变），测不到时退回 88 */
+const getHeaderReservePx = () => {
+  const el = document.getElementById('site-header')
+  if (!el) return 88
+  return Math.ceil(el.getBoundingClientRect().height)
+}
+
 const updateHeroHeight = () => {
-  heroCarouselHeight.value = `${Math.max(400, window.innerHeight - HEADER_RESERVE_PX)}px`
+  heroCarouselHeight.value = `${Math.max(400, window.innerHeight - getHeaderReservePx())}px`
 }
 
 const scrollToCatalog = () => {
@@ -143,7 +149,7 @@ const handleCreateOrder = async () => {
   } catch (error) {
     console.error('订单创建失败:', error)
     message.value = error.message
-    ElMessage.error('预订失败: ' + error.message)
+    ElMessage.error('预订失败: ' + error.message) 
   }
 }
 

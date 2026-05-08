@@ -2,6 +2,8 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { authSendVerifyCode } from '../../api/modules/auth'
+import { shouldUseMock } from '../../api/http'
 
 const props = defineProps({
   mode: { type: String, default: 'login' },
@@ -11,6 +13,7 @@ const props = defineProps({
 const emit = defineEmits(['submit'])
 const router = useRouter()
 const loginMethod = ref('password')
+const sendingCode = ref(false)
 
 const form = reactive({
   username: '',
@@ -21,13 +24,26 @@ const form = reactive({
   confirmPassword: '',
 })
 
-const sendCode = () => {
-  const receiver = form.email
+const sendCode = async () => {
+  const receiver = form.email.trim()
   if (!receiver) {
     ElMessage.warning('请先输入邮箱')
     return
   }
-  ElMessage.success('验证码已发送')
+  if (shouldUseMock()) {
+    ElMessage.success('验证码已发送（本地模拟）')
+    return
+  }
+  const scene = props.mode === 'register' ? 'register' : 'login'
+  try {
+    sendingCode.value = true
+    const { message } = await authSendVerifyCode(receiver, scene)
+    ElMessage.success(message || '验证码已发送')
+  } catch (e) {
+    ElMessage.error(e?.message || '发送失败')
+  } finally {
+    sendingCode.value = false
+  }
 }
 
 const onSubmit = () => {
@@ -99,14 +115,18 @@ const goToSwitchPage = () => {
           </div>
           <el-form :model="form" @submit.prevent>
             <el-form-item v-if="mode === 'register' || loginMethod === 'password'">
-              <el-input v-model.trim="form.username" placeholder="请输入账号" clearable />
+              <el-input
+                v-model.trim="form.username"
+                :placeholder="mode === 'login' ? '请输入邮箱' : '请输入用户名'"
+                clearable
+              />
             </el-form-item>
             <el-form-item v-if="mode === 'register'">
               <el-input v-model.trim="form.name" placeholder="请输入姓名" clearable />
             </el-form-item>
             <el-form-item v-if="mode === 'register'" class="code-row">
               <el-input v-model.trim="form.email" placeholder="请输入邮箱" clearable />
-              <el-button class="code-button" @click="sendCode">发送验证码</el-button>
+              <el-button class="code-button" :loading="sendingCode" @click="sendCode">发送验证码</el-button>
             </el-form-item>
             <el-form-item v-if="mode === 'register'">
               <el-input v-model.trim="form.verificationCode" placeholder="请输入验证码" clearable />
@@ -116,7 +136,7 @@ const goToSwitchPage = () => {
             </el-form-item>
             <el-form-item v-if="mode === 'login' && loginMethod === 'code'" class="code-row">
               <el-input v-model.trim="form.email" placeholder="请输入邮箱" clearable />
-              <el-button class="code-button" @click="sendCode">获取验证码</el-button>
+              <el-button class="code-button" :loading="sendingCode" @click="sendCode">获取验证码</el-button>
             </el-form-item>
             <el-form-item v-if="mode === 'login' && loginMethod === 'code'">
               <el-input v-model.trim="form.verificationCode" placeholder="请输入验证码" clearable />

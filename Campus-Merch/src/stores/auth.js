@@ -28,17 +28,21 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile))
   }
 
-  /** 解析真实登录接口返回的 data */
+  /** 解析真实登录接口返回的 data（兼容 Laravel：token + user_id + role） */
   const applyRemoteLogin = (envelope) => {
     const raw = envelope?.data ?? envelope
     const nextToken =
       raw?.token || raw?.accessToken || raw?.access_token || raw?.jwt || ''
-    const user = raw?.user || raw?.profile || raw
+    const user = raw?.user || raw?.profile
+    const roleSource = user?.role ?? raw?.role
+    const roleStr = String(roleSource ?? '').toLowerCase()
+    const uid = user?.user_id ?? user?.id ?? raw?.user_id ?? raw?.id
     const nextProfile = {
-      username: user?.username ?? user?.account ?? '',
-      name: user?.name ?? user?.nickname ?? user?.username ?? '用户',
-      role: user?.role === 'admin' || user?.role === 'ADMIN' ? 'admin' : 'student',
-      email: user?.email ?? '',
+      userId: uid,
+      username: user?.username ?? user?.account ?? user?.email ?? raw?.email ?? (uid != null ? String(uid) : ''),
+      name: user?.name ?? user?.nickname ?? (uid != null ? `用户${uid}` : '用户'),
+      role: roleStr === 'admin' ? 'admin' : 'student',
+      email: user?.email ?? raw?.email ?? '',
     }
     if (!nextToken) throw new Error('登录响应缺少 token')
     persistSession(nextToken, nextProfile)
@@ -50,12 +54,11 @@ export const useAuthStore = defineStore('auth', () => {
     if (loginType === 'code' && !verificationCode) throw new Error('请填写验证码')
 
     if (!shouldUseMock()) {
-      const envelope = await authLogin({
-        username,
-        password,
-        verificationCode,
-        loginType,
-      })
+      if (loginType === 'code') {
+        throw new Error('当前后端仅支持邮箱密码登录，请切换为密码登录')
+      }
+      const email = String(username).trim()
+      const envelope = await authLogin({ email, password })
       applyRemoteLogin(envelope)
       return
     }
@@ -89,7 +92,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     if (!shouldUseMock()) {
-      await authRegister({ username, name, email, verificationCode, password })
+      await authRegister({
+        name: name || username,
+        email,
+        password,
+        verificationCode,
+      })
       return
     }
 
