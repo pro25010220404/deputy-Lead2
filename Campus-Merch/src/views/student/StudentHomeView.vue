@@ -50,7 +50,7 @@ const loadStats = async () => {
   try {
     const [{ data: orders }, { data: products }] = await Promise.all([
       getMyOrders(),
-      getProducts({ status: 'online' }),
+      getProducts({}),
     ])
     quickStats[1].value = orders.list?.filter((o) => o.status === 'ready').length || 0
     quickStats[2].value = orders.list?.filter((o) => o.status === 'booked').length || 0

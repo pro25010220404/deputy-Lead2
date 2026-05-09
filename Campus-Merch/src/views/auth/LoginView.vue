@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import TriangleLoginPanel from '../../components/login/TriangleLoginPanel.vue'
 import { useAuthStore } from '../../stores/auth'
 
@@ -16,7 +17,7 @@ const handleLogin = async (payload) => {
     const target = route.query.redirect || (authStore.isAdmin ? '/admin/stats' : '/student')
     router.push(target)
   } catch (error) {
-    alert(error.message)
+    ElMessage.error(error?.message || '登录失败')
   } finally {
     loading.value = false
   }

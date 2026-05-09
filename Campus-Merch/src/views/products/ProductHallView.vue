@@ -7,7 +7,6 @@ import {
   getProductDetail,
   getProducts,
 } from '../../services/campusMerch'
-import { Star, StarFilled } from '@element-plus/icons-vue'
 import carousel1 from '../../assets/CarouselScreen1.jpg'
 import carousel2 from '../../assets/CarouselScreen2.jpg'
 import carousel3 from '../../assets/CarouselScreen3.jpg'
@@ -18,17 +17,11 @@ const router = useRouter()
 const heroSlides = [carousel1, carousel2, carousel3, carousel4]
 
 const catalogRef = ref(null)
+const HEADER_RESERVE_PX = 88
 const heroCarouselHeight = ref('560px')
 
-/** 轮播高度 = 视口高 − 主布局页眉实际高度（页眉换行时会变），测不到时退回 88 */
-const getHeaderReservePx = () => {
-  const el = document.getElementById('site-header')
-  if (!el) return 88
-  return Math.ceil(el.getBoundingClientRect().height)
-}
-
 const updateHeroHeight = () => {
-  heroCarouselHeight.value = `${Math.max(400, window.innerHeight - getHeaderReservePx())}px`
+  heroCarouselHeight.value = `${Math.max(400, window.innerHeight - HEADER_RESERVE_PX)}px`
 }
 
 const scrollToCatalog = () => {
@@ -44,7 +37,8 @@ const selectedProductId = ref('')
 const filters = reactive({
   keyword: '',
   category: '',
-  status: 'online',
+  /** 不传 status，避免后端对 status=0 语义与前端不一致时返回空列表；需筛上架态可改为 'online' */
+  status: '',
 })
 
 const orderForm = reactive({
@@ -57,59 +51,11 @@ const orderForm = reactive({
 const detailVisible = ref(false)
 const detailLoading = ref(false)
 
-const favoriteMap = ref(new Map())
-const favoritesData = ref([])
-const showToast = ref(false)
-const toastMessage = ref('')
-
-const loadFavorites = () => {
-  const stored = localStorage.getItem('campus_merch_favorites')
-  if (stored) {
-    try {
-      favoritesData.value = JSON.parse(stored)
-      favoritesData.value.forEach(item => {
-        favoriteMap.value.set(item.id, true)
-      })
-    } catch (e) {
-      console.error('解析收藏数据失败:', e)
-    }
-  }
-}
-
-const saveFavorites = () => {
-  localStorage.setItem('campus_merch_favorites', JSON.stringify(favoritesData.value))
-}
-
-const toggleFavorite = (product, event) => {
-  event.stopPropagation()
-  const isFavorite = favoriteMap.value.has(product.id)
-  
-  if (isFavorite) {
-    favoriteMap.value.delete(product.id)
-    favoritesData.value = favoritesData.value.filter(item => item.id !== product.id)
-    toastMessage.value = '已取消收藏'
-  } else {
-    favoriteMap.value.set(product.id, true)
-    favoritesData.value.push(product)
-    toastMessage.value = '已收藏'
-  }
-  
-  saveFavorites()
-  showToast.value = true
-  setTimeout(() => {
-    showToast.value = false
-  }, 2000)
-}
-
-const isFavorite = (productId) => {
-  return favoriteMap.value.has(productId)
-}
-
 const fetchProducts = async () => {
   loading.value = true
   try {
     const { data } = await getProducts(filters)
-    products.value = data.list
+    products.value = Array.isArray(data?.list) ? data.list : []
     if (detailVisible.value && selectedProductId.value) {
       const stillExists = products.value.some(
         (item) => String(item.id) === String(selectedProductId.value)
@@ -182,7 +128,6 @@ const formatPrice = (n) => {
 onMounted(() => {
   updateHeroHeight()
   window.addEventListener('resize', updateHeroHeight, { passive: true })
-  loadFavorites()
   fetchProducts()
 })
 
@@ -224,7 +169,9 @@ onUnmounted(() => {
         <p class="hero-brand-tagline">To light up campus and bring joy</p>
         <h2 class="hero-brand-title">CampusMerch</h2>
       </div>
-
+      <button type="button" class="scroll-down" @click="scrollToCatalog">
+        <span>下滑浏览商品</span>
+      </button>
     </section>
 
     <section id="product-catalog" ref="catalogRef" class="catalog">
@@ -277,21 +224,7 @@ onUnmounted(() => {
                   <img v-if="item.coverUrl" :src="item.coverUrl" :alt="item.name" loading="lazy" />
                   <div v-else class="product-card-placeholder">暂无图片</div>
                 </div>
-                <div class="product-card-header">
-                  <p class="product-card-name">{{ item.name }}</p>
-                  <span 
-                    class="favorite-icon" 
-                    :class="{ active: isFavorite(item.id) }"
-                    @click="toggleFavorite(item, $event)"
-                  >
-                    <svg v-if="isFavorite(item.id)" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                    <svg v-else viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                      <path d="M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24zM12 15.4l-3.76 2.27 1-4.28-3.32-2.88 4.38-.38L12 6.1l1.7 4.04 4.38.38-3.32 2.88 1 4.28L12 15.4z"/>
-                    </svg>
-                  </span>
-                </div>
+                <p class="product-card-name">{{ item.name }}</p>
                 <p class="product-card-meta">{{ item.category }}</p>
                 <p class="product-card-price">
                   <span class="product-card-currency">¥</span>{{ formatPrice(item.price) }}
@@ -342,12 +275,6 @@ onUnmounted(() => {
         </template>
       </div>
     </el-dialog>
-
-    <Transition name="toast">
-      <div v-if="showToast" class="toast">
-        {{ toastMessage }}
-      </div>
-    </Transition>
   </div>
 </template>
 
@@ -382,11 +309,8 @@ onUnmounted(() => {
 }
 
 .hero-carousel :deep(.el-carousel__arrow) {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.35);
   color: #f2efe5;
-  width: 120px;
-  height: 120px;
-  font-size: 56px;
 }
 
 .hero-carousel :deep(.el-carousel__indicators) {
@@ -551,7 +475,7 @@ onUnmounted(() => {
 
 .about-us-en {
   margin: 0 0 10px;
-  font-size: clamp(36px, 6vw, 52px);
+  font-size: clamp(28px, 5vw, 40px);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -568,7 +492,7 @@ onUnmounted(() => {
 
 .about-us-zh {
   margin: 0 0 28px;
-  font-size: clamp(20px, 3vw, 26px);
+  font-size: clamp(16px, 2.4vw, 20px);
   font-weight: 400;
   font-family:
     'PingFang SC',
@@ -582,8 +506,8 @@ onUnmounted(() => {
 .about-us-body {
   margin: 0 auto;
   max-width: 720px;
-  font-size: 17px;
-  line-height: 2.2;
+  font-size: 15px;
+  line-height: 1.85;
   font-weight: 400;
   text-align: center;
   color: #3e413d;
@@ -900,78 +824,5 @@ onUnmounted(() => {
     max-width: 360px;
     margin: 0 auto;
   }
-}
-
-.product-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.product-card-header .product-card-name {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: #1f221f;
-  line-height: 1.35;
-  font-family:
-    'PingFang SC',
-    'Microsoft YaHei',
-    ui-sans-serif,
-    system-ui,
-    sans-serif;
-  flex: 1;
-  text-align: left;
-}
-
-.favorite-icon {
-  font-size: 20px;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-  flex-shrink: 0;
-  color: #9ca3af;
-}
-
-.favorite-icon:hover {
-  transform: scale(1.2);
-}
-
-.favorite-icon.active {
-  animation: pulse 0.3s ease;
-  color: #f59e0b;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.3); }
-  100% { transform: scale(1); }
-}
-
-.toast {
-  position: fixed;
-  top: 100px;
-  right: 20px;
-  background: #2a6f67;
-  color: #fff;
-  padding: 12px 24px;
-  border-radius: 8px;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.toast-enter-active,
-.toast-leave-active {
-  transition: all 0.3s ease;
-}
-
-.toast-enter-from {
-  opacity: 0;
-  transform: translateX(100%);
-}
-
-.toast-leave-to {
-  opacity: 0;
-  transform: translateX(100%);
 }
 </style>
